@@ -402,7 +402,11 @@ class HomeInterface(BaseInterface):
         self.start_button.setFixedHeight(48)
         self.start_button.setMinimumWidth(180)
         self.start_button.setShortcut(QKeySequence('Ctrl+Return'))
-        self.start_button.setToolTip(gt('启动一条龙 (Ctrl+Enter)'))
+        # tooltip 用 QKeySequence.toString() 自动适配平台:
+        # Windows 显示 "Ctrl+Enter",macOS 自动转 Meta+Return(显示 ⌘+Return)
+        self.start_button.setToolTip(
+            f"{gt('启动一条龙')} ({self.start_button.shortcut().toString()})"
+        )
         self.start_button.clicked.connect(self._on_start_game)
         apply_shadow(self.start_button, blur=24, offset_x=0, offset_y=6, alpha=140)
 
