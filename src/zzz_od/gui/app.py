@@ -249,13 +249,26 @@ def main() -> None:
     if _init_error is not None:
         # 显示错误弹窗，询问用户是否打开排障文档
         error_message = f"启动一条龙失败,报错信息如下:\n{stack_trace}\n\n是否打开排障文档查看解决方案?"
-        # MB_ICONERROR | MB_OKCANCEL = 0x10 | 0x01 = 0x11
-        # 返回值: IDOK = 1, IDCANCEL = 2
-        result = ctypes.windll.user32.MessageBoxW(0, error_message, "错误", 0x11)
-
-        # 如果用户点击确定，则打开排障文档
-        if result == 1:  # IDOK
-            webbrowser.open("https://docs.qq.com/doc/p/7add96a4600d363b75d2df83bb2635a7c6a969b5")
+        handled = False
+        # 优先走平台抽象层:Windows 走 user32.MessageBoxW,macOS 走 NSAlert,其它走 tkinter 兜底
+        try:
+            from one_dragon.platform import get_platform_context
+            if get_platform_context().dialog.confirm("错误", error_message):
+                webbrowser.open("https://docs.qq.com/doc/p/7add96a4600d363b75d2df83bb2635a7c6a969b5")
+            handled = True
+        except Exception:
+            # 平台抽象层不可用时,继续走下方兜底
+            pass
+        if not handled and sys.platform == 'win32':
+            # Windows 原生 ctypes 兜底(用户另一 agent 已封装 WindowsDialogService,但保留此兜底路径以防万一)
+            # MB_ICONERROR | MB_OKCANCEL = 0x10 | 0x01 = 0x11
+            # 返回值: IDOK = 1, IDCANCEL = 2
+            result = ctypes.windll.user32.MessageBoxW(0, error_message, "错误", 0x11)
+            if result == 1:  # IDOK
+                webbrowser.open("https://docs.qq.com/doc/p/7add96a4600d363b75d2df83bb2635a7c6a969b5")
+        elif not handled:
+            # macOS/Linux 平台抽象层不可用,降级到 stderr 输出
+            print(error_message, file=sys.stderr)
 
         sys.exit(1)
 
