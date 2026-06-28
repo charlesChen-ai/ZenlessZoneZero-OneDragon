@@ -67,6 +67,7 @@ class AppRunCard(DraggableListItem):
         self.switch_btn.setOffText('')
         self.switch_btn.setChecked(switch_on)
         self.switch_btn.checkedChanged.connect(self._on_switch_changed)
+        self.switch_btn.setToolTip(gt('关闭后此应用不会在一键启动一条龙中运行,仍可在独立应用页运行'))
 
         # 创建 MultiPushSettingCard 作为 content_widget
         content_widget = MultiPushSettingCard(
