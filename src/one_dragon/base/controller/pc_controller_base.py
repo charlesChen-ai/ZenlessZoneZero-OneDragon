@@ -1,33 +1,39 @@
 import contextlib
 import ctypes
+import sys
 import time
 from functools import lru_cache
 
 import pyautogui
-import win32api
-import win32con
-import win32gui
 from cv2.typing import MatLike
 from pynput import keyboard
 
 from one_dragon.base.controller.controller_base import ControllerBase
-from one_dragon.base.controller.pc_button import pc_button_utils
-from one_dragon.base.controller.pc_button.ds4_button_controller import (
-    Ds4ButtonController,
-)
-from one_dragon.base.controller.pc_button.keyboard_mouse_controller import (
-    KeyboardMouseController,
-)
-from one_dragon.base.controller.pc_button.pc_button_controller import PcButtonController
-from one_dragon.base.controller.pc_button.xbox_button_controller import (
-    XboxButtonController,
-)
-from one_dragon.base.controller.pc_game_window import PcGameWindow
-from one_dragon.base.controller.pc_screenshot.pc_screenshot_controller import (
-    PcScreenshotController,
-)
 from one_dragon.base.geometry.point import Point
 from one_dragon.utils.log_utils import log
+
+if sys.platform == 'win32':
+    import win32api
+    import win32con
+    import win32gui
+
+    from one_dragon.base.controller.pc_button import pc_button_utils
+    from one_dragon.base.controller.pc_button.ds4_button_controller import (
+        Ds4ButtonController,
+    )
+    from one_dragon.base.controller.pc_button.keyboard_mouse_controller import (
+        KeyboardMouseController,
+    )
+    from one_dragon.base.controller.pc_button.pc_button_controller import (
+        PcButtonController,
+    )
+    from one_dragon.base.controller.pc_button.xbox_button_controller import (
+        XboxButtonController,
+    )
+    from one_dragon.base.controller.pc_game_window import PcGameWindow
+    from one_dragon.base.controller.pc_screenshot.pc_screenshot_controller import (
+        PcScreenshotController,
+    )
 
 
 class PcControllerBase(ControllerBase):
