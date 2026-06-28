@@ -336,6 +336,7 @@ src/one_dragon/platform/
 | 分辨率非 1920x1080 | 客户端默认窗口尺寸 | 文档要求用户把云客户端窗口调整到 1920x1080；或在 `client_to_screen` 后做等比缩放 |
 | 帧率波动导致截图错位 | 高延迟 / 卡顿 | 已有 `.debug/images/` 缓存；让 OCR / YOLO 间隔可配 |
 | macOS 屏幕录制权限未授权 | 首次启动 | 启动时检测 `Quartz.CGRequestScreenCaptureAccess`，缺失则用 `QMessageBox` 引导用户去系统设置授权 |
+| **macOS 输入监控权限未授权** | **首次启动** | **必须**系统设置 → 隐私与安全 → 输入监控 → 添加 Terminal/iTerm2，**重启 iTerm2** 生效。pyautogui 的 click 走 `kCGHIDEventTap`，无此权限会被 WindowServer 静默丢弃。这是**最常见的失败原因**。 |
 | 辅助功能权限未授权 | pynput 全局监听需要 | 同上引导 |
 | 黑色 dock 图标不显示 | 没有 .icns | Phase 6 提供 `app.icns` 与 `Info.plist` |
 | `pyobjc` 体积大 | 增加 ~50MB | 拆 `[macos]` extra，按需安装 |
