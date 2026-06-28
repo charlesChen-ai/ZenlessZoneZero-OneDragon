@@ -162,3 +162,12 @@ class CustomConfig(YamlConfig):
         """
         color_str = f"{new_value[0]},{new_value[1]},{new_value[2]}"
         self.update('global_theme_color', color_str)
+
+    @property
+    def auto_start_after_fix(self) -> bool:
+        """主页 PreFlight 检查失败时是否默认勾选\"修复后自动启动\"。"""
+        return self.get('auto_start_after_fix', False)
+
+    @auto_start_after_fix.setter
+    def auto_start_after_fix(self, value: bool) -> None:
+        self.update('auto_start_after_fix', value)
