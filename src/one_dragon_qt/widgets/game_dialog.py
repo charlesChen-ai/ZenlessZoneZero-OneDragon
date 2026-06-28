@@ -1,9 +1,10 @@
-from PySide6.QtCore import QTimer, QPropertyAnimation, QPoint, Qt, QEasingCurve
-from PySide6.QtGui import QColor, QFont
-from PySide6.QtWidgets import QLabel, QHBoxLayout
+from PySide6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Qt, QTimer
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QHBoxLayout, QLabel
 from qfluentwidgets import MaskDialogBase, SimpleCardWidget
 
 from one_dragon_qt.services.styles_manager import OdQtStyleSheet
+from one_dragon_qt.utils.font_utils import get_ui_font
 
 
 class GameDialog(MaskDialogBase):
@@ -30,7 +31,7 @@ class GameDialog(MaskDialogBase):
 
         for char in self.text:
             label = QLabel(char, self)
-            label.setFont(QFont("Microsoft YaHei", 12, QFont.Weight.Bold))
+            label.setFont(get_ui_font(12, bold=True))
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.viewLayout.addWidget(label)
             self.labels.append(label)
