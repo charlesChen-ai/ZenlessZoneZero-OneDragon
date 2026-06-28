@@ -276,8 +276,13 @@ def main() -> None:
     w.show()
     w.activateWindow()
 
+    # UX-D01 Phase 2: ctx.init() 完成前显示加载遮罩
+    from one_dragon_qt.widgets.loading_overlay import LoadingOverlay
+    init_overlay = LoadingOverlay.show(w, gt('正在初始化...'))
+
     # 加载配置
     init_runner = CtxInitRunner(_ctx, w)
+    init_runner.finished.connect(lambda: LoadingOverlay.hide(init_overlay))
     init_runner.start()
 
     # 启动应用程序事件循环
