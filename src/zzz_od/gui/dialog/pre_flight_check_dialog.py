@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import QWidget
-from qfluentwidgets import BodyLabel, MessageBoxBase, SubtitleLabel
+from qfluentwidgets import BodyLabel, CheckBox, MessageBoxBase, SubtitleLabel
 
 from one_dragon.utils.i18_utils import gt
 from zzz_od.context.zzz_context import ZContext
@@ -26,7 +26,16 @@ class PreFlightCheckDialog(MessageBoxBase):
             item.setWordWrap(True)
             self.viewLayout.addWidget(item)
 
+        self.viewLayout.addSpacing(8)
+        self.auto_start_checkbox = CheckBox(gt('修复完成后自动启动'))
+        self.viewLayout.addWidget(self.auto_start_checkbox)
+
         self.widget.setMinimumWidth(420)
+
+    @property
+    def auto_start_enabled(self) -> bool:
+        """是否勾选"修复完成后自动启动"。"""
+        return self.auto_start_checkbox.isChecked()
 
 
 def check_pre_flight(ctx: ZContext) -> list[tuple[str, str, str | None]]:

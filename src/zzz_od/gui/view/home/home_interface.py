@@ -576,6 +576,12 @@ class HomeInterface(BaseInterface):
 
         self._refresh_ready_state()
 
+        # PreFlight 检查失败时,用户可能在设置页面勾选了"修复后自动启动"。
+        # 回到主页时自动重试,无需再次手动点击。
+        if getattr(self, '_pending_auto_start', False):
+            self._pending_auto_start = False
+            self._on_start_game()
+
     def on_interface_leave(self) -> None:
         """视觉切换前恢复 margin 和标题栏，避免新页面闪烁旧样式。"""
         if self.main_window and self._saved_area_margins is not None:
@@ -660,6 +666,7 @@ class HomeInterface(BaseInterface):
             messages = [msg for msg, _, _ in issues]
             dialog = PreFlightCheckDialog(messages, self)
             if dialog.exec():
+                self._pending_auto_start = dialog.auto_start_enabled
                 _, target_name, sub_name = issues[0]
                 target = self._find_widget_by_name(target_name)
                 if target is not None:
