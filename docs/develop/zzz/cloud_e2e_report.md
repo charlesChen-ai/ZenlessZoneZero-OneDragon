@@ -3,6 +3,7 @@
 > 验证平台层 (PR #21) 在 macOS + 云·绝区零客户端上的可行性。
 > 测试时间：2026-06-28
 > 测试人：opencode (with 用户协助)
+> **最终结果：✅ 全部通过**
 
 ## 1. 环境
 
@@ -83,34 +84,38 @@ client (1286, 802) -> screen (1493, 879)  # 接近右下角 ✓
 
 ## 4. 已知问题
 
-### 4.1 ⚠️【关键】macOS Input Monitoring 权限
+### 4.1 ✅ macOS Input Monitoring 权限（已授权）
 
-**现象**：pyautogui 鼠标点击**没有**被云游戏窗口接收（diff=0.0）。
+**最终验证（2026-06-28 11:31）**：用户授权 Input Monitoring 后重跑预演，**完美通过**。
 
-| 方式 | diff | 备注 |
-|---|---|---|
-| 第一次测试（FIFA 比赛画面） | **22.5** | 点击中央角色，截图变化 |
-| 后续测试（菜单/其他状态） | **0.0** | 多次点击不同位置均无变化 |
-| 1 秒无操作基线 | **0.0** | 静默时也不变 |
-| `pyautogui.click` + 1s 后再截 | **0.0** | ❌ |
-| 直接 Quartz `CGEventPost` | **0.0** | ❌（同样被丢弃） |
+```
+=== Phase 1: 找窗口 ===
+  ✓ handle=43189 bounds=(2182, 78, 3568, 980)
 
-**根因**：
-- pyautogui 和 Quartz CGEventPost 都走 `kCGHIDEventTap` 发送合成鼠标事件
-- macOS Catalina+ 要求**发送方**（这里是我的 iTerm2 / Python 进程）拥有 **Input Monitoring** 权限，否则 WindowServer 静默丢弃事件
-- 用户的 iTerm2 可能只授权了**辅助功能**（接收端权限）但**未授权输入监控**（发送端权限）
-- 这是**两个独立的隐私权限**，在系统设置 → 隐私与安全下分两栏
+=== Phase 2: 截图 ===
+  shape: (902, 1386, 3)  std=92.4  ✓ 真实游戏画面
 
-**用户修复路径**：
-1. 系统设置 → 隐私与安全 → 输入监控（Input Monitoring）
-2. 点击 `+` → 添加 `/Applications/iTerm.app`（或当前 terminal）
-3. **重启 iTerm2**（必须重启才生效）
-4. 重跑 `tests/one_dragon/platform/cloud_zzz_preflight.py`
+=== Phase 3: 点击中央 ===
+  mouse move: 83ms
+  click: 178ms
+  diff=74.9  ✓ 点击触发了游戏内响应
 
-**对项目的影响**：
-- 平台层代码本身没问题
-- 用户必须先授权这个权限才能跑通一条龙
-- 在 `docs/develop/guides/mac_cloud_porting.md` 添加这个警告
+✅ 预演通过 — macOS + 云·绝区零可作为一条龙运行环境
+```
+
+**Before/After 截图差异**：
+- Before: iTerm2 + 云·绝区零 启动器混杂的 UI
+- After: 完整的云·绝区零 登录/启动画面（角色 + "去购买" 按钮 + 邦邦点时长 0 分钟）
+- 状态从"启动器"切换到"进入游戏"，证明 click 触发了云游戏内的状态机推进
+
+**diff=74.9 的意义**：远超阈值 5，说明 click 不是被 WindowServer 静默丢弃，而是**真实抵达云游戏窗口并触发了响应**。
+
+**授权方法**（macOS Sonoma+）：
+1. 系统设置 → 隐私与安全 → **输入监控**（Input Monitoring）
+2. 点击 `+` → 添加 `/Applications/iTerm.app`
+3. **重启 iTerm2**（必须）
+
+之前的失败原因（**Input Monitoring ≠ 辅助功能**）：
 
 ### 4.2 PySide6 窗口在 Quartz 中不可见
 
@@ -152,11 +157,11 @@ client (1286, 802) -> screen (1493, 879)  # 接近右下角 ✓
 | 截图 (Quartz CGWindowListCreateImage) | ✅ 拿到真实云游戏画面 |
 | 截图 (mss) | ✅ 拿到真实云游戏画面 |
 | 坐标转换 (client_to_screen) | ✅ 精确 |
-| 鼠标移动 (pyautogui) | ✅ 准确（duration=0）或带动画 |
-| 鼠标点击 (pyautogui) | ⚠️ **依赖 Input Monitoring 权限**（首次 diff=22.5，后续 diff=0） |
-| 辅助功能 (Accessibility) 权限 | ✅ 已授权（iTerm2 / Terminal） |
-| 屏幕录制 (Screen Recording) 权限 | ⚠️ preflight 报 False 但实际可用 |
-| **Input Monitoring 权限** | ❌ **首次测试未授权，需要用户手动授权** |
+| 鼠标移动 (pyautogui) | ✅ 准确 |
+| 鼠标点击 (pyautogui) | ✅ **diff=74.9**（授权 Input Monitoring 后） |
+| 辅助功能 (Accessibility) 权限 | ✅ 已授权 |
+| 屏幕录制 (Screen Recording) 权限 | ✅ 实际可用（preflight 报 False 但能截图） |
+| **Input Monitoring 权限** | ✅ **已授权并验证** |
 
 ## 6. 建议
 
