@@ -456,6 +456,21 @@ class OneDragonContext(ContextEventBus, OneDragonEnvContext):
         self.on_switch_instance()
         self.dispatch_event(ContextInstanceEventEnum.instance_active.value, instance_idx)
 
+    def move_app_to_top(self, app_id: str) -> None:
+        """把指定应用移到当前实例的一条龙运行列表顶部。
+
+        改动后会通过 instance_active 事件通知 UI 刷新。
+        """
+        config = self.app_group_manager.get_one_dragon_group_config(self.current_instance_idx)
+        existing_ids = [item.app_id for item in config.app_list]
+        if app_id not in existing_ids:
+            return
+        new_order = [app_id] + [aid for aid in existing_ids if aid != app_id]
+        config.set_app_order(new_order)
+        config.save_app_list()
+        # 复用 instance_active 事件触发 UI 刷新(AppRunList 监听此事件)
+        self.dispatch_event(ContextInstanceEventEnum.instance_active.value, self.current_instance_idx)
+
     def on_switch_instance(self) -> None:
         """
         切换实例后的回调，用于更新 controller 配置
