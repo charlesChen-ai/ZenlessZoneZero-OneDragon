@@ -91,6 +91,9 @@ class AppRunCard(DraggableListItem):
             }.get(status, '')
             prefix = status_text if status_text else gt('上次运行')
             self.content_widget.setContent(f"{prefix} · {self.run_record.run_time}")
+            # UX-B02 Phase 2: 失败时把错误摘要放到 tooltip
+            if status == AppRunRecord.STATUS_FAIL and self.run_record.error_message:
+                self.content_widget.contentLabel.setToolTip(self.run_record.error_message)
 
             if status == AppRunRecord.STATUS_SUCCESS:
                 icon = FluentIcon.COMPLETED.icon(color=FluentThemeColor.DEFAULT_BLUE.value)

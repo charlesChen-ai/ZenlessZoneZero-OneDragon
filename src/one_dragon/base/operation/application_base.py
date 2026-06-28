@@ -111,11 +111,13 @@ class Application(Operation):
         :param result: 运行结果
         :return:
         """
-        if self.run_record is not None:
-            if result.success:
-                self.run_record.update_status(AppRunRecord.STATUS_SUCCESS)
-            else:
-                self.run_record.update_status(AppRunRecord.STATUS_FAIL)
+        if self.run_record is None:
+            return
+        if result.success:
+            self.run_record.update_status(AppRunRecord.STATUS_SUCCESS)
+        else:
+            error_msg = (result.status or '') if hasattr(result, 'status') else ''
+            self.run_record.update_status_with_error(AppRunRecord.STATUS_FAIL, error_msg)
 
     @property
     def current_execution_desc(self) -> str:

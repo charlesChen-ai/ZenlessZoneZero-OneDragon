@@ -31,6 +31,7 @@ class AppRunRecord(YamlConfig):
         self.run_time: str = ''
         self.run_time_float: float = 0
         self.run_status: int = AppRunRecord.STATUS_WAIT  # 0=未运行 1=成功 2=失败 3=运行中
+        self.error_message: str = ''  # 失败时的错误摘要(UX-B02)
         self.game_refresh_hour_offset: int = game_refresh_hour_offset  # 游戏内每天刷新的偏移小时数 以凌晨12点为界限
         self.record_period: AppRunRecordPeriod = record_period
         super().__init__(app_id, instance_idx=instance_idx, sub_dir=['app_run_record'], sample=False)
@@ -42,6 +43,7 @@ class AppRunRecord(YamlConfig):
         self.run_time = self.get('run_time', '-')
         self.run_time_float = self.get('run_time_float', 0)
         self.run_status = self.get('run_status', AppRunRecord.STATUS_WAIT)
+        self.error_message = self.get('error_message', '')
 
     def check_and_update_status(self):
         """
@@ -64,10 +66,26 @@ class AppRunRecord(YamlConfig):
             self.dt = self.get_current_dt()
             self.run_time = self.app_record_now_time_str()
             self.run_time_float = time.time()
+            self.error_message = ''  # 成功时清空错误信息
             self.update('dt', self.dt, False)
             self.update('run_time', self.run_time, False)
             self.update('run_time_float', self.run_time_float, False)
+            self.update('error_message', self.error_message, False)
 
+        self.save()
+
+    def update_status_with_error(self, new_status: int, error_message: str) -> None:
+        """更新状态并保存错误信息(用于失败时)。"""
+        self.run_status = new_status
+        self.error_message = error_message
+        self.dt = self.get_current_dt()
+        self.run_time = self.app_record_now_time_str()
+        self.run_time_float = time.time()
+        self.update('run_status', self.run_status, False)
+        self.update('dt', self.dt, False)
+        self.update('run_time', self.run_time, False)
+        self.update('run_time_float', self.run_time_float, False)
+        self.update('error_message', self.error_message, False)
         self.save()
 
     def reset_record(self):
