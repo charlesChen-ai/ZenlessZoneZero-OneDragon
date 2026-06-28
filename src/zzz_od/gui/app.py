@@ -2,6 +2,7 @@ try:
     import sys
 
     from PySide6.QtCore import Qt, QThread, QTimer, Signal
+    from PySide6.QtGui import QKeySequence, QShortcut
     from PySide6.QtWidgets import QApplication
     from qfluentwidgets import NavigationItemPosition, Theme, setTheme
 
@@ -243,14 +244,18 @@ try:
             if hasattr(self, "overlay_manager") and self.overlay_manager is not None:
                 self.overlay_manager.shutdown()
 
+            # MAC-C01: macOS 上点击关闭按钮应隐藏到 Dock,不退出进程
+            if sys.platform == 'darwin' and self.isVisible():
+                event.ignore()
+                self.hide()
+                return
+
             # 调用父类的关闭事件
             super().closeEvent(event)
 
 
 except Exception:
-    import ctypes
     import traceback
-    import webbrowser
 
     stack_trace = traceback.format_exc()
     _init_error = f"启动一条龙失败，报错信息如下:\n{stack_trace}"
@@ -259,14 +264,13 @@ except Exception:
 # 初始化应用程序，并启动主窗口
 def main() -> None:
     if _init_error is not None:
+        import webbrowser
+
+        from one_dragon.platform import get_platform_context
+
         # 显示错误弹窗，询问用户是否打开排障文档
         error_message = f"启动一条龙失败,报错信息如下:\n{stack_trace}\n\n是否打开排障文档查看解决方案?"
-        # MB_ICONERROR | MB_OKCANCEL = 0x10 | 0x01 = 0x11
-        # 返回值: IDOK = 1, IDCANCEL = 2
-        result = ctypes.windll.user32.MessageBoxW(0, error_message, "错误", 0x11)
-
-        # 如果用户点击确定，则打开排障文档
-        if result == 1:  # IDOK
+        if get_platform_context().dialog.confirm("错误", error_message):
             webbrowser.open("https://docs.qq.com/doc/p/7add96a4600d363b75d2df83bb2635a7c6a969b5")
 
         sys.exit(1)
@@ -276,6 +280,27 @@ def main() -> None:
     )
     app = QApplication(sys.argv)
     app.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings)
+
+    # MAC-C01: 应用名称与显示名称,macOS 上系统菜单与 Dock 使用
+    app.setApplicationName('ZenlessZoneZero-OneDragon')
+    app.setApplicationDisplayName('绝区零一条龙')
+
+    # MAC-C01: macOS 上关闭按钮 = hide 到 Dock,进程不退出(由 Cmd+Q 或 Dock 右键退出触发 quit)
+    if sys.platform == 'darwin':
+        app.setQuitOnLastWindowClosed(False)
+        # 全局 Cmd+Q 退出快捷键(QKeySequence.StandardKey.Quit 在 mac 上自动映射 Cmd+Q)
+        QShortcut(QKeySequence(QKeySequence.StandardKey.Quit), app, activated=app.quit)
+
+        # Dock 点击恢复窗口:监听 applicationStateChanged,AppWindow 已 hide 时 show
+        def _on_app_state_changed(state):
+            if state == Qt.ApplicationState.ApplicationActive:
+                for w in app.topLevelWidgets():
+                    if isinstance(w, AppWindow) and not w.isVisible():
+                        w.show()
+                        w.raise_()
+                        w.activateWindow()
+
+        app.applicationStateChanged.connect(_on_app_state_changed)
 
     _ctx = ZContext()
 
