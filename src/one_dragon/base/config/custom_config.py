@@ -162,3 +162,12 @@ class CustomConfig(YamlConfig):
         """
         color_str = f"{new_value[0]},{new_value[1]},{new_value[2]}"
         self.update('global_theme_color', color_str)
+
+    @property
+    def high_contrast_mode(self) -> bool:
+        """是否启用高对比度模式(强制使用深色主题)。"""
+        return self.get('high_contrast_mode', False)
+
+    @high_contrast_mode.setter
+    def high_contrast_mode(self, value: bool) -> None:
+        self.update('high_contrast_mode', value)
