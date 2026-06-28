@@ -9,6 +9,7 @@ from one_dragon.utils.log_utils import log
 T = TypeVar("T")
 _THREAD_PREFIX = "od_gpu"
 _DML_PROVIDER = "DmlExecutionProvider"
+_CML_PROVIDER = "CoreMLExecutionProvider"
 _executor_local = threading.local()
 
 
@@ -41,7 +42,9 @@ def run_sync(fn: Callable[..., T], /, *args, **kwargs) -> T:
 
 
 def should_serialize_providers(providers: Sequence[str] | None) -> bool:
-    return providers is not None and _DML_PROVIDER in providers
+    if providers is None:
+        return False
+    return _DML_PROVIDER in providers or _CML_PROVIDER in providers
 
 
 def create_onnx_session(

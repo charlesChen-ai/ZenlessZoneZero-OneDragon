@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import urllib.request
 import zipfile
@@ -131,8 +132,10 @@ class OnnxModelLoader:
         if self.gpu:
             if 'CUDAExecutionProvider' in availables:
                 providers = ['CUDAExecutionProvider']
-            elif 'DmlExecutionProvider' in availables:
+            elif sys.platform == 'win32' and 'DmlExecutionProvider' in availables:
                 providers = ['DmlExecutionProvider']
+            elif sys.platform == 'darwin' and 'CoreMLExecutionProvider' in availables:
+                providers = ['CoreMLExecutionProvider']
             else:
                 providers = ['CPUExecutionProvider']
                 log.warning('未找到GPU执行提供程序，回退到CPU')
