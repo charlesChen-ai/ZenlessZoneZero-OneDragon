@@ -6,15 +6,20 @@ from PySide6.QtWidgets import QApplication
 from qfluentwidgets import Theme, setTheme
 
 from one_dragon_qt.app.directory_picker import DirectoryPickerWindow
+from one_dragon_qt.utils.icon_utils import get_platform_app_icon
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     setTheme(Theme['AUTO'])
 
-    if hasattr(sys, '_MEIPASS'):
-        icon_path = Path(sys._MEIPASS) / 'resources/assets/ui/logo.ico'
+    icon_name = get_platform_app_icon()
+    if icon_name is not None:
+        if hasattr(sys, '_MEIPASS'):
+            icon_path = Path(sys._MEIPASS) / f'resources/assets/ui/{icon_name}'
+        else:
+            icon_path = Path.cwd() / f'assets/ui/{icon_name}'
     else:
-        icon_path = Path.cwd() / 'assets/ui/logo.ico'
+        icon_path = None
     installer_dir = Path(sys.argv[0]).resolve().parent
 
     picker_window = DirectoryPickerWindow(icon_path=icon_path, installer_dir=str(installer_dir))

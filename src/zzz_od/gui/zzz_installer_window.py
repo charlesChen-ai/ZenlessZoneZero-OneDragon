@@ -1,5 +1,6 @@
 from one_dragon.base.operation.one_dragon_env_context import OneDragonEnvContext
 from one_dragon_qt.app.installer import InstallerWindowBase
+from one_dragon_qt.utils.icon_utils import get_platform_app_icon
 from one_dragon_qt.view.installer_interface import InstallerInterface
 from one_dragon_qt.view.source_config_interface import SourceConfigInterface
 from zzz_od.gui.view.installer.gamepad_install_card import GamepadInstallCard
@@ -13,7 +14,7 @@ class ZInstallerWindow(InstallerWindowBase):
             ctx=ctx,
             win_title=win_title,
             parent=parent,
-            app_icon='logo.ico'
+            app_icon=get_platform_app_icon()
         )
 
         # 隐藏左侧导航栏
