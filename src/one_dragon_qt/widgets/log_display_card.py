@@ -1,11 +1,22 @@
-from collections import deque
 import logging
-from PySide6.QtCore import Signal, QObject, QTimer, QEvent
-from PySide6.QtGui import QMouseEvent
-from qfluentwidgets import PlainTextEdit, isDarkTheme
+import re
+from collections import deque
+
+from PySide6.QtCore import QEvent, QObject, QTimer, Signal
+from PySide6.QtGui import (
+    QColor,
+    QKeySequence,
+    QMouseEvent,
+    QShortcut,
+    QTextCharFormat,
+    QTextCursor,
+)
+from qfluentwidgets import LineEdit, PlainTextEdit, isDarkTheme
+
+from one_dragon.utils.i18_utils import gt
 from one_dragon.utils.log_utils import log as od_log
 from one_dragon.yolo.log_utils import log as yolo_log
-import re
+
 
 class LogSignal(QObject):
     new_log = Signal(str)
@@ -14,11 +25,11 @@ class LogReceiver(logging.Handler):
     def __init__(self):
         super().__init__()
         # 限制日志数量
-        self.log_list: deque[str] = deque(maxlen=64)  
+        self.log_list: deque[str] = deque(maxlen=64)
         # 新日志
         self.new_logs: list[str] = []
         # 是否接收日志
-        self.update = False 
+        self.update = False
 
     def emit(self, record):
         """将新日志记录添加到日志队列"""
@@ -51,7 +62,7 @@ class LogDisplayCard(PlainTextEdit):
         self.setReadOnly(True)
 
         # 初始化颜色
-        self.init_color()  
+        self.init_color()
 
         # 初始化接收器
         self.receiver = LogReceiver()
@@ -75,16 +86,27 @@ class LogDisplayCard(PlainTextEdit):
         self.auto_scroll = False
 
         # 更新频率(毫秒)
-        self.update_frequency = 100 
+        self.update_frequency = 100
 
         # 日志是否运行
-        self.is_running = False  
+        self.is_running = False
 
         # 暂停标记
         self.is_pause = False
 
         # 限制显示行数
         self.setMaximumBlockCount(192)
+
+        # ---- 搜索栏 (浮层,默认隐藏,Ctrl+F 显示) ----
+        self.search_bar = LineEdit(self)
+        self.search_bar.setPlaceholderText(gt('搜索日志'))
+        self.search_bar.setMaximumWidth(280)
+        self.search_bar.hide()
+        self.search_bar.textChanged.connect(self._on_search_changed)
+        self.search_bar.installEventFilter(self)
+        self._search_term: str = ''
+        self._search_shortcut = QShortcut(QKeySequence('Ctrl+F'), self, activated=self._show_search_bar)
+        self._close_search_shortcut = QShortcut(QKeySequence('Escape'), self, activated=self._hide_search_bar)
 
     def init_color(self):
         """根据主题设置颜色"""
@@ -137,7 +159,7 @@ class LogDisplayCard(PlainTextEdit):
         new_logs = self.receiver.get_new_logs()
         # 格式化日志
         if len(new_logs) != 0:
-            formatted_logs = self._format_logs(new_logs)  
+            formatted_logs = self._format_logs(new_logs)
             self.appendHtml(formatted_logs)
         if self.auto_scroll:
             self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())  # 滚动到最新位置
@@ -174,7 +196,7 @@ class LogDisplayCard(PlainTextEdit):
         is_at_bottom = scrollbar.value() == scrollbar.maximum()
         is_scrollable = scrollbar.maximum() > scrollbar.minimum()
 
-        if not self.auto_scroll: 
+        if not self.auto_scroll:
             if is_at_bottom and is_scrollable:
                 if self.is_running and not self.is_pause:
                     self.auto_scroll = True
@@ -192,31 +214,31 @@ class LogDisplayCard(PlainTextEdit):
 
         for log_item in log_list:
             formatted_log = log_item
-            
+
             # 1. 先处理红色错误关键字
             error_keywords = ['失败', '错误', '异常', '警告', 'ERROR', 'WARNING', 'FAIL', 'Exception', 'Error']
             for keyword in error_keywords:
                 if keyword in formatted_log:
                     formatted_log = formatted_log.replace(
-                        keyword, 
+                        keyword,
                         f'<span style="color: {self._error_color}; font-weight: bold;">{keyword}</span>'
                     )
-            
+
             # 2. 再处理绿色方括号内容(注意避免重复处理已经有HTML标签的部分)
             if '[' in log_item and ']' in log_item:
                 # 使用正则表达式来更精确地处理方括号，避免与HTML标签冲突
 
                 pattern = r'\[([^\]]+)\]'
-                
+
                 def replace_brackets(match):
                     content = match.group(1)
                     # 检查是否已经被HTML标签包围(避免重复处理)
                     if '<span' in content or '</span>' in content:
                         return match.group(0)  # 返回原始内容
                     return f'[<span style="color: {self._color};">{content}</span>]'
-                
+
                 formatted_log = re.sub(pattern, replace_brackets, formatted_log)
-                
+
             formatted_logs.append(formatted_log)
 
         # 检查是否有日志
@@ -224,3 +246,65 @@ class LogDisplayCard(PlainTextEdit):
             return formatted_log
         else:
             return '<br>'.join(formatted_logs)
+
+    # ------------------- 搜索 ------------------- #
+
+    def resizeEvent(self, event) -> None:
+        """窗口尺寸变化时,把搜索栏定位到右上角。"""
+        super().resizeEvent(event)
+        self._position_search_bar()
+
+    def _position_search_bar(self) -> None:
+        """把搜索栏定位到右上角。"""
+        if self.search_bar.isVisible():
+            margin = 8
+            self.search_bar.move(
+                self.width() - self.search_bar.width() - margin,
+                margin,
+            )
+
+    def _show_search_bar(self) -> None:
+        """Ctrl+F: 显示并聚焦搜索栏。"""
+        self.search_bar.show()
+        self.search_bar.setFocus()
+        self.search_bar.selectAll()
+        self._position_search_bar()
+
+    def _hide_search_bar(self) -> None:
+        """Esc: 隐藏搜索栏并清空搜索。"""
+        self.search_bar.clear()
+        self.search_bar.hide()
+        self._clear_search_highlight()
+        self.setFocus()
+
+    def _on_search_changed(self, term: str) -> None:
+        """搜索词变化时,实时高亮所有匹配位置。"""
+        self._search_term = term
+        self._apply_search_highlight()
+
+    def _apply_search_highlight(self) -> None:
+        """在 PlainTextEdit 中高亮所有 _search_term 出现的位置。"""
+        self._clear_search_highlight()
+        if not self._search_term:
+            return
+        fmt = QTextCharFormat()
+        fmt.setBackground(QColor(255, 213, 79))  # 黄色高亮
+        cursor = self.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+        doc = self.document()
+        idx = 0
+        while True:
+            found_cursor = doc.find(self._search_term, idx)
+            if found_cursor.isNull():
+                break
+            extra = type(self.ExtraSelection())()  # type: ignore[attr-defined]
+            extra.cursor = found_cursor
+            extra.format = fmt
+            self.setExtraSelections([extra])
+            idx = found_cursor.selectionEnd()
+            if idx >= doc.characterCount():
+                break
+
+    def _clear_search_highlight(self) -> None:
+        """清空搜索高亮。"""
+        self.setExtraSelections([])
