@@ -104,11 +104,31 @@ class MyAppSetting(AppSettingProvider):
 
 ## 选择 INTERFACE 还是 FLYOUT
 
+**默认推荐 FLYOUT**,原因:
+- 不离开当前页面,用户路径短(齿轮 → 弹窗 → 完成 → 自动关闭)
+- 不需要在导航栏维护返回按钮状态
+- 不需要写 `BaseInterface` 子类,纯组件组合即可
+- 与 `AppSettingFlyout` 基类配合,自动管理 `card_margins`、`group_id` 等细节
+
+只有以下场景才考虑 INTERFACE:
+
 | 场景 | 推荐 |
 |---|---|
 | 设置项 ≤ 5 个，无复杂交互 | **FLYOUT** — 快速查看/修改，不离开当前页面 |
-| 设置项较多，或需要多标签/列表等复杂布局 | **INTERFACE** — 有完整的页面空间 |
-| 设置界面已有现成的 `BaseInterface` 子类 | **INTERFACE** — 直接复用，零成本 |
+| 设置项较多（> 5 个） | INTERFACE — 需要滚动或多分组 |
+| 需要多标签 / `SegmentedSettingInterface` / 列表等复杂布局 | INTERFACE — FLYOUT 内嵌不下 |
+| 设置界面已有现成的 `BaseInterface` 子类 | INTERFACE — 直接复用，零成本 |
+| 需要复用其它页面逻辑（如截图工具、模板选择器） | INTERFACE — FLYOUT 内嵌成本高 |
+
+**判断决策树**:
+
+```
+是否需要多标签/分组/复杂布局?
+├── 是 → INTERFACE
+└── 否 → FLYOUT (默认)
+```
+
+**迁移建议**: 现有 INTERFACE Provider 不强制迁移,新 Provider 优先 FLYOUT。详见 `docs/develop/frontend_optimization_task.md` 中 UX-A03 节。
 
 ---
 
