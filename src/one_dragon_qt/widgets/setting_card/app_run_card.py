@@ -95,9 +95,15 @@ class AppRunCard(DraggableListItem):
         if self.run_record is None:
             self.content_widget.setContent('')
         else:
-            self.content_widget.setContent(f"{gt('上次运行')} {self.run_record.run_time}")
-
             status = self.run_record.run_status_under_now
+            status_text = {
+                AppRunRecord.STATUS_SUCCESS: gt('成功'),
+                AppRunRecord.STATUS_FAIL: gt('失败'),
+                AppRunRecord.STATUS_RUNNING: gt('运行中'),
+            }.get(status, '')
+            prefix = status_text if status_text else gt('上次运行')
+            self.content_widget.setContent(f"{prefix} · {self.run_record.run_time}")
+
             if status == AppRunRecord.STATUS_SUCCESS:
                 icon = FluentIcon.COMPLETED.icon(color=FluentThemeColor.DEFAULT_BLUE.value)
             elif status == AppRunRecord.STATUS_RUNNING:
