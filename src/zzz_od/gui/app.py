@@ -67,7 +67,7 @@ try:
                     ctx.one_dragon_config.current_active_instance.name,
                 ),
                 project_config=ctx.project_config,
-                app_icon="logo.ico",
+                app_icon=get_platform_app_icon(),
                 parent=parent,
             )
 

@@ -11,6 +11,7 @@ from one_dragon_qt.app.devtools.image_processing_interface import (
     ImageProcessingInterface,
 )
 from one_dragon_qt.services.styles_manager import OdQtStyleSheet
+from one_dragon_qt.utils.icon_utils import get_platform_app_icon
 from one_dragon_qt.windows.app_window_base import AppWindowBase
 
 
@@ -24,7 +25,7 @@ class DevtoolsAppWindow(AppWindowBase):
             self,
             win_title=gt("开发工具"),
             project_config=ctx.project_config,
-            app_icon="logo.ico",
+            app_icon=get_platform_app_icon(),
             parent=parent,
         )
 
