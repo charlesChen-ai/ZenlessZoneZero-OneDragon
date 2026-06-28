@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 from PySide6.QtCore import QSize, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QFont
+from PySide6.QtGui import QColor, QDesktopServices, QFont, QKeySequence
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
@@ -25,6 +25,7 @@ from qfluentwidgets import (
 
 from one_dragon.base.config.custom_config import BackgroundTypeEnum
 from one_dragon.utils import app_utils, os_utils
+from one_dragon.utils.i18_utils import gt
 from one_dragon.utils.log_utils import log
 from one_dragon_qt.services.theme_manager import ThemeManager
 from one_dragon_qt.utils.color_utils import get_foreground_color
@@ -400,6 +401,8 @@ class HomeInterface(BaseInterface):
         self.start_button.setFont(QFont("Microsoft YaHei", 16, QFont.Weight.Bold))
         self.start_button.setFixedHeight(48)
         self.start_button.setMinimumWidth(180)
+        self.start_button.setShortcut(QKeySequence('Ctrl+Return'))
+        self.start_button.setToolTip(gt('启动一条龙 (Ctrl+Enter)'))
         self.start_button.clicked.connect(self._on_start_game)
         apply_shadow(self.start_button, blur=24, offset_x=0, offset_y=6, alpha=140)
 
