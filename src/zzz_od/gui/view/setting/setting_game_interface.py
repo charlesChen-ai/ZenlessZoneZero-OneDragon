@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtWidgets import QWidget
 from qfluentwidgets import FluentIcon, InfoBar, PushButton, SettingCardGroup
 
@@ -23,6 +25,7 @@ from one_dragon_qt.widgets.setting_card.expand_setting_card_group import (
 from one_dragon_qt.widgets.setting_card.gamepad_action_key_card import (
     GamepadActionKeyCard,
 )
+from one_dragon_qt.widgets.setting_card.help_card import HelpCard
 from one_dragon_qt.widgets.setting_card.key_setting_card import KeySettingCard
 from one_dragon_qt.widgets.setting_card.multi_push_setting_card import (
     MultiPushSettingCard,
@@ -32,7 +35,6 @@ from one_dragon_qt.widgets.setting_card.spin_box_setting_card import (
 )
 from one_dragon_qt.widgets.setting_card.switch_setting_card import SwitchSettingCard
 from one_dragon_qt.widgets.setting_card.text_setting_card import TextSettingCard
-from one_dragon_qt.widgets.setting_card.help_card import HelpCard
 from one_dragon_qt.widgets.vertical_scroll_interface import VerticalScrollInterface
 from zzz_od.config.game_config import (
     ControlMethodEnum,
@@ -41,6 +43,8 @@ from zzz_od.config.game_config import (
     GamepadTypeEnum,
 )
 from zzz_od.context.zzz_context import ZContext
+
+_IS_WINDOWS = sys.platform == 'win32'
 
 
 class SettingGameInterface(VerticalScrollInterface):
@@ -79,18 +83,19 @@ class SettingGameInterface(VerticalScrollInterface):
                                                  options_enum=TypeInputWay)
         basic_group.addSettingCard(self.input_way_opt)
 
-        basic_group.addSettingCard(self._get_background_mode_group())
+        if _IS_WINDOWS:
+            basic_group.addSettingCard(self._get_background_mode_group())
 
-        self.hdr_btn_enable = PushButton(text=gt('启用 HDR'), icon=FluentIcon.SETTING, parent=self)
-        self.hdr_btn_enable.clicked.connect(self._on_hdr_enable_clicked)
-        self.hdr_btn_disable = PushButton(text=gt('禁用 HDR'), icon=FluentIcon.SETTING, parent=self)
-        self.hdr_btn_disable.clicked.connect(self._on_hdr_disable_clicked)
-        self.hdr_btn = MultiPushSettingCard(icon=FluentIcon.SETTING, title='切换 HDR 状态',
-                                            content='仅影响手动启动游戏，一条龙启动游戏会自动禁用 HDR',
-                                            btn_list=[self.hdr_btn_disable, self.hdr_btn_enable])
-        basic_group.addSettingCard(self.hdr_btn)
+            self.hdr_btn_enable = PushButton(text=gt('启用 HDR'), icon=FluentIcon.SETTING, parent=self)
+            self.hdr_btn_enable.clicked.connect(self._on_hdr_enable_clicked)
+            self.hdr_btn_disable = PushButton(text=gt('禁用 HDR'), icon=FluentIcon.SETTING, parent=self)
+            self.hdr_btn_disable.clicked.connect(self._on_hdr_disable_clicked)
+            self.hdr_btn = MultiPushSettingCard(icon=FluentIcon.SETTING, title='切换 HDR 状态',
+                                                content='仅影响手动启动游戏，一条龙启动游戏会自动禁用 HDR',
+                                                btn_list=[self.hdr_btn_disable, self.hdr_btn_enable])
+            basic_group.addSettingCard(self.hdr_btn)
 
-        basic_group.addSettingCard(self._get_launch_argument_group())
+            basic_group.addSettingCard(self._get_launch_argument_group())
 
         return basic_group
 
@@ -247,21 +252,22 @@ class SettingGameInterface(VerticalScrollInterface):
 
         self.input_way_opt.init_with_adapter(self.ctx.game_config.type_input_way_adapter)
 
-        self.background_mode_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('background_mode'))
-        self.background_gamepad_type_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('background_gamepad_type'))
-        self.mouse_flash_duration_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('mouse_flash_duration'))
-        for action_name, card in self._xbox_action_cards.items():
-            card.init_with_adapter(self.ctx.game_config.get_prop_adapter(f'xbox_action_{action_name}'))
-        for action_name, card in self._ds4_action_cards.items():
-            card.init_with_adapter(self.ctx.game_config.get_prop_adapter(f'ds4_action_{action_name}'))
-        self._toggle_action_cards()
+        if _IS_WINDOWS:
+            self.background_mode_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('background_mode'))
+            self.background_gamepad_type_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('background_gamepad_type'))
+            self.mouse_flash_duration_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('mouse_flash_duration'))
+            for action_name, card in self._xbox_action_cards.items():
+                card.init_with_adapter(self.ctx.game_config.get_prop_adapter(f'xbox_action_{action_name}'))
+            for action_name, card in self._ds4_action_cards.items():
+                card.init_with_adapter(self.ctx.game_config.get_prop_adapter(f'ds4_action_{action_name}'))
+            self._toggle_action_cards()
 
-        self.launch_argument_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('launch_argument'))
-        self.screen_size_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('screen_size'))
-        self.full_screen_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('full_screen'))
-        self.popup_window_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('popup_window'))
-        self.monitor_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('monitor'))
-        self.launch_argument_advance.init_with_adapter(self.ctx.game_config.get_prop_adapter('launch_argument_advance'))
+            self.launch_argument_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('launch_argument'))
+            self.screen_size_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('screen_size'))
+            self.full_screen_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('full_screen'))
+            self.popup_window_switch.init_with_adapter(self.ctx.game_config.get_prop_adapter('popup_window'))
+            self.monitor_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('monitor'))
+            self.launch_argument_advance.init_with_adapter(self.ctx.game_config.get_prop_adapter('launch_argument_advance'))
 
         self.control_method_opt.init_with_adapter(self.ctx.game_config.get_prop_adapter('control_method'))
 

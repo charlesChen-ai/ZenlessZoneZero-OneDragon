@@ -7,6 +7,7 @@
 - 一条龙整体架构：[docs/develop/one_dragon/one_dragon_architecture.md](docs/develop/one_dragon/one_dragon_architecture.md)
 - 应用插件开发指引：[docs/develop/guides/application_plugin_guide.md](docs/develop/guides/application_plugin_guide.md)
 - 应用设置界面开发指引：[docs/develop/guides/application_setting_guide.md](docs/develop/guides/application_setting_guide.md)
+- macOS + 云游戏移植任务文档：[docs/develop/guides/mac_cloud_porting.md](docs/develop/guides/mac_cloud_porting.md)
 
 ## 项目概述
 

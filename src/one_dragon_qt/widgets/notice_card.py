@@ -19,7 +19,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QColor,
-    QFont,
     QImage,
     QPainter,
     QPainterPath,
@@ -49,6 +48,7 @@ from qfluentwidgets import (
 from one_dragon.utils import os_utils
 from one_dragon.utils.log_utils import log
 from one_dragon_qt.services.styles_manager import OdQtStyleSheet
+from one_dragon_qt.utils.font_utils import get_ui_font
 from one_dragon_qt.utils.image_utils import scale_pixmap_for_high_dpi
 from one_dragon_qt.widgets.pivot import PhosPivot
 
@@ -768,8 +768,8 @@ class NoticePostDelegate(QStyledItemDelegate):
 
     def __init__(self, parent=None):
         QStyledItemDelegate.__init__(self, parent)
-        self.title_font = QFont("Microsoft YaHei", 10)
-        self.date_font = QFont("Microsoft YaHei", 10)
+        self.title_font = get_ui_font(10)
+        self.date_font = get_ui_font(10)
         self._hover_row = -1
 
     def setHoverRow(self, row: int):

@@ -15,6 +15,7 @@ from qfluentwidgets.common.animation import ScaleSlideAnimation
 from qfluentwidgets.components.navigation.pivot import PivotItem
 
 from one_dragon_qt.services.styles_manager import OdQtStyleSheet
+from one_dragon_qt.utils.font_utils import get_ui_font
 
 
 class PhosPivot(Pivot):
@@ -49,7 +50,7 @@ class PhosPivot(Pivot):
         item = PhosPivotItem(text, self)
         if icon:
             item.setIcon(icon)
-        font = QFont("Microsoft YaHei", 12)
+        font = get_ui_font(12)
         font.setWeight(QFont.Weight.Bold)
         font.setHintingPreference(QFont.HintingPreference.PreferFullHinting)
         item.setFont(font)

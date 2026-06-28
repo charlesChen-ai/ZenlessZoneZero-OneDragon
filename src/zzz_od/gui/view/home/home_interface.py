@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 from PySide6.QtCore import QSize, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QFont, QKeySequence
+from PySide6.QtGui import QColor, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
@@ -29,6 +29,7 @@ from one_dragon.utils.i18_utils import gt
 from one_dragon.utils.log_utils import log
 from one_dragon_qt.services.theme_manager import ThemeManager
 from one_dragon_qt.utils.color_utils import get_foreground_color
+from one_dragon_qt.utils.font_utils import get_ui_font
 from one_dragon_qt.utils.layout_utils import apply_shadow
 from one_dragon_qt.widgets.banner import Banner
 from one_dragon_qt.widgets.base_interface import BaseInterface
@@ -398,7 +399,7 @@ class HomeInterface(BaseInterface):
         # 启动游戏按钮布局
         self.start_button = PillPushButton(FluentIcon.PLAY_SOLID, '启动一条龙')
         self.start_button.setObjectName("start_button")
-        self.start_button.setFont(QFont("Microsoft YaHei", 16, QFont.Weight.Bold))
+        self.start_button.setFont(get_ui_font(16, bold=True))
         self.start_button.setFixedHeight(48)
         self.start_button.setMinimumWidth(180)
         self.start_button.setShortcut(QKeySequence('Ctrl+Return'))
