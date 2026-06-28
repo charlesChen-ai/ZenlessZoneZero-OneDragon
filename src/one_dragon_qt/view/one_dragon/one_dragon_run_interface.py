@@ -284,18 +284,10 @@ class OneDragonRunInterface(SplitAppRunInterface):
         settable = window.app_setting_manager.settable_app_ids
         for card in self.app_run_list._app_cards:
             card.setting_btn.setVisible(card.app.app_id in settable)
-            card.set_notify_visible(card.app.app_id in self.ctx.notify_config.app_map)
 
     def _find_app_card_setting_btn(self, app_id: str):
         """找到对应 app_id 的卡片的设置按钮"""
         for card in self.app_run_list._app_cards:
             if card.app.app_id == app_id:
                 return card.setting_btn
-        return None
-
-    def _find_app_card_notify_btn(self, app_id: str):
-        """找到对应 app_id 的卡片的通知设置按钮"""
-        for card in self.app_run_list._app_cards:
-            if card.app.app_id == app_id:
-                return card.more_btn
         return None
