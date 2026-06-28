@@ -23,6 +23,8 @@ class VerticalScrollInterface(BaseInterface):
 
         self._param_content_widget: QWidget | None = content_widget
         self._init: bool = False  # 是否已经初始化了布局
+        self._scroll_area: SingleDirectionScrollArea | None = None  # 滚动区域,首次 _init_layout 后赋值
+        self._saved_scroll_value: int | None = None  # 切走时保存的滚动位置
 
     def on_interface_shown(self) -> None:
         """
@@ -32,6 +34,20 @@ class VerticalScrollInterface(BaseInterface):
         BaseInterface.on_interface_shown(self)
 
         self._init_layout()
+
+        # 恢复切走前保存的滚动位置
+        if self._scroll_area is not None and self._saved_scroll_value is not None:
+            self._scroll_area.verticalScrollBar().setValue(self._saved_scroll_value)
+            self._saved_scroll_value = None
+
+    def on_interface_hidden(self) -> None:
+        """
+        子界面隐藏时保存滚动位置,供下次显示时恢复。
+        :return:
+        """
+        if self._scroll_area is not None:
+            self._saved_scroll_value = self._scroll_area.verticalScrollBar().value()
+        BaseInterface.on_interface_hidden(self)
 
     def _init_layout(self) -> None:
         """
@@ -63,6 +79,7 @@ class VerticalScrollInterface(BaseInterface):
         scroll_area = SingleDirectionScrollArea(orient=Qt.Orientation.Vertical)
         scroll_area.setViewportMargins(11, 0, 11, 0)
         main_layout.addWidget(scroll_area, stretch=1)
+        self._scroll_area = scroll_area
 
         # 包一层容器，用底边距在滚动内容末尾提供视觉边距
         wrapper = QWidget()
