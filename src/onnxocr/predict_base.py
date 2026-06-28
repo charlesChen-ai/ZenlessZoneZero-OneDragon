@@ -1,10 +1,12 @@
+import sys
+
 import onnxruntime
 
 from one_dragon.utils import gpu_executor
 from one_dragon.utils.log_utils import log
 
 
-class PredictBase(object):
+class PredictBase:
     def __init__(self):
         pass
 
@@ -13,8 +15,10 @@ class PredictBase(object):
         if use_gpu:
             if 'CUDAExecutionProvider' in availables:
                 providers = ['CUDAExecutionProvider']
-            elif 'DmlExecutionProvider' in availables:
+            elif sys.platform == 'win32' and 'DmlExecutionProvider' in availables:
                 providers = ['DmlExecutionProvider']
+            elif sys.platform == 'darwin' and 'CoreMLExecutionProvider' in availables:
+                providers = ['CoreMLExecutionProvider']
             else:
                 providers = ['CPUExecutionProvider']
         else:

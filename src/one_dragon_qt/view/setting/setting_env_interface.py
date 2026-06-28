@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import Qt
 from PySide6.QtWidgets import QWidget
@@ -30,6 +32,8 @@ from one_dragon_qt.widgets.setting_card.password_switch_setting_card import (
 from one_dragon_qt.widgets.setting_card.switch_setting_card import SwitchSettingCard
 from one_dragon_qt.widgets.setting_card.text_setting_card import TextSettingCard
 from one_dragon_qt.widgets.vertical_scroll_interface import VerticalScrollInterface
+
+_IS_WINDOWS = sys.platform == 'win32'
 
 
 class SettingEnvInterface(VerticalScrollInterface):
@@ -65,6 +69,12 @@ class SettingEnvInterface(VerticalScrollInterface):
             icon=FluentIcon.CAMERA, title='截图方法',
             options_enum=ScreenshotMethodEnum
         )
+        if not _IS_WINDOWS:
+            self.screenshot_method_opt.set_options_by_list([
+                ScreenshotMethodEnum.AUTO.value,
+                ScreenshotMethodEnum.MSS.value,
+                ScreenshotMethodEnum.PIL.value,
+            ])
         self.screenshot_method_opt.value_changed.connect(lambda: self.ctx.init_controller())
         basic_group.addSettingCard(self.screenshot_method_opt)
 
