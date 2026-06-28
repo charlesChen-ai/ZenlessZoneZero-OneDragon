@@ -213,8 +213,8 @@ class AppSettingManager(QObject):
     def _make_flyout_handler(self, get_cls: Callable[[], type]) -> Callable[..., None]:
         """创建 FLYOUT 模式的设置回调（弹窗显示）。"""
 
-        def handler(parent: QWidget, group_id: str, target: QWidget) -> None:
-            self._show_flyout(get_cls(), parent, group_id, target)
+        def handler(parent: QWidget, group_id: str, target: QWidget, app_id: str | None = None) -> None:
+            self._show_flyout(get_cls(), parent, group_id, target, app_id=app_id)
 
         return handler
 
@@ -247,9 +247,12 @@ class AppSettingManager(QObject):
         parent: QWidget,
         group_id: str,
         target: QWidget,
+        app_id: str | None = None,
     ) -> None:
         """显示 Flyout 风格的设置弹窗（每次新建实例）。"""
-        flyout_cls.show_flyout(ctx=self.ctx, group_id=group_id, target=target, parent=parent)
+        flyout_cls.show_flyout(
+            ctx=self.ctx, group_id=group_id, target=target, parent=parent, app_id=app_id,
+        )
 
     @staticmethod
     def _find_pivot_navigator(widget: QWidget) -> PivotNavigatorInterface | None:
