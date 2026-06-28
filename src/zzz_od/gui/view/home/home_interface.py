@@ -667,7 +667,11 @@ class HomeInterface(BaseInterface):
         issues = check_pre_flight(self.ctx)
         if issues:
             messages = [msg for msg, _, _ in issues]
-            dialog = PreFlightCheckDialog(messages, self)
+            dialog = PreFlightCheckDialog(
+                messages,
+                default_auto_start=self.ctx.custom_config.auto_start_after_fix,
+                parent=self,
+            )
             if dialog.exec():
                 self._pending_auto_start = dialog.auto_start_enabled
                 _, target_name, sub_name = issues[0]

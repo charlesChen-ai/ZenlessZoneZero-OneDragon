@@ -9,7 +9,12 @@ from zzz_od.context.zzz_context import ZContext
 
 class PreFlightCheckDialog(MessageBoxBase):
 
-    def __init__(self, issues: list[str], parent: QWidget | None = None):
+    def __init__(
+        self,
+        issues: list[str],
+        default_auto_start: bool = False,
+        parent: QWidget | None = None,
+    ):
         MessageBoxBase.__init__(self, parent)
         self.yesButton.setText(gt('前往配置'))
         self.cancelButton.setText(gt('仍然继续'))
@@ -28,9 +33,19 @@ class PreFlightCheckDialog(MessageBoxBase):
 
         self.viewLayout.addSpacing(8)
         self.auto_start_checkbox = CheckBox(gt('修复完成后自动启动'))
+        self.auto_start_checkbox.setChecked(default_auto_start)
+        self.auto_start_checkbox.toggled.connect(self._on_auto_start_toggled)
         self.viewLayout.addWidget(self.auto_start_checkbox)
 
         self.widget.setMinimumWidth(420)
+
+    def _on_auto_start_toggled(self, checked: bool) -> None:
+        """勾选状态变化时,写回 custom_config 作为用户全局偏好。"""
+        parent = self.parent()
+        while parent is not None and not hasattr(parent, 'ctx'):
+            parent = parent.parent()
+        if parent is not None and hasattr(parent, 'ctx'):
+            parent.ctx.custom_config.auto_start_after_fix = checked
 
     @property
     def auto_start_enabled(self) -> bool:
