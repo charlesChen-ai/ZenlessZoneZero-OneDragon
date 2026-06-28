@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from functools import cached_property
 
 from one_dragon.base.operation.one_dragon_context import OneDragonContext
@@ -115,15 +116,20 @@ class ZContext(OneDragonContext):
         if self.game_account_config.platform == GamePlatformEnum.PC.value.value:
             if self.controller is not None:
                 self.controller.cleanup_after_app_shutdown()
-            from zzz_od.controller.zzz_pc_controller import ZPcController
-            self.controller: ZPcController = ZPcController(
-                game_config=self.game_config,
-                screenshot_method=self.env_config.screenshot_method,
-                standard_width=self.project_config.screen_standard_width,
-                standard_height=self.project_config.screen_standard_height
-            )
-            # 初始化窗口标题
-            self.controller.set_window_title(self._get_win_title())
+            if sys.platform == 'win32':
+                from zzz_od.controller.zzz_pc_controller import ZPcController
+                self.controller: ZPcController = ZPcController(
+                    game_config=self.game_config,
+                    screenshot_method=self.env_config.screenshot_method,
+                    standard_width=self.project_config.screen_standard_width,
+                    standard_height=self.project_config.screen_standard_height
+                )
+                # 初始化窗口标题
+                self.controller.set_window_title(self._get_win_title())
+            else:
+                # 非 Windows 平台使用 MockController,所有操作 NoOp,仅让 GUI 可启动
+                from one_dragon.base.controller.mock_controller import MockController
+                self.controller = MockController()
 
     def init_for_application(self) -> None:
         self.map_service.reload()  # 传送需要用的数据
