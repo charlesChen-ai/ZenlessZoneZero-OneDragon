@@ -109,7 +109,6 @@ class AppRunList(DraggableList):
                 )
                 card.set_app(app, run_record)
                 card.set_switch_on(app.enabled)
-                card.set_notify_visible(app.app_id in self.ctx.notify_config.app_map)
 
     def _create_new_cards(
         self,
@@ -152,7 +151,6 @@ class AppRunList(DraggableList):
             card.switched.connect(self.app_switch_changed.emit)
             card.setting_clicked.connect(self.app_setting_clicked.emit)
             card.notify_clicked.connect(self.app_notify_clicked.emit)
-            card.set_notify_visible(app.app_id in self.ctx.notify_config.app_map)
 
     def update_cards_display(self) -> None:
         """
