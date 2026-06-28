@@ -22,6 +22,7 @@ class SwitchSettingCard(SettingCardBase, AdapterInitMixin):
                  margins: Margins = Margins(16, 16, 0, 16),
                  on_text_cn: str = "开",
                  off_text_cn: str = "关",
+                 tooltip_cn: str | None = None,
                  parent=None):
 
         SettingCardBase.__init__(
@@ -45,6 +46,9 @@ class SwitchSettingCard(SettingCardBase, AdapterInitMixin):
         # 将按钮添加到布局
         self.hBoxLayout.addWidget(self.btn, 0, Qt.AlignmentFlag.AlignRight)
         self.hBoxLayout.addSpacing(16)
+
+        if tooltip_cn is not None:
+            self.btn.setToolTip(gt(tooltip_cn))
 
     def _on_value_changed(self, value: bool):
         # 更新配置适配器中的值并发出信号
