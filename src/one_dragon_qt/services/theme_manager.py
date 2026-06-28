@@ -1,11 +1,12 @@
 from PySide6.QtGui import QColor
-from qfluentwidgets import setThemeColor
+from qfluentwidgets import Theme, setTheme, setThemeColor
 
 
 class ThemeManager:
     """全局主题色管理器"""
 
     _current_color = (0, 120, 215)  # 默认蓝色
+    _high_contrast: bool = False  # UX-E03 高对比度模式标志
 
     @classmethod
     def get_current_color(cls) -> tuple[int, int, int]:
@@ -55,6 +56,20 @@ class ThemeManager:
         return f"rgb({cls._current_color[0]}, {cls._current_color[1]}, {cls._current_color[2]})"
 
     @classmethod
+    def is_high_contrast(cls) -> bool:
+        """当前是否启用高对比度模式。"""
+        return cls._high_contrast
+
+    @classmethod
+    def set_high_contrast(cls, enabled: bool) -> None:
+        """切换高对比度模式(强制使用深色主题以提高对比度)。"""
+        if cls._high_contrast == enabled:
+            return
+        cls._high_contrast = enabled
+        # 强制使用 DARK 主题以提供更高对比度
+        setTheme(Theme.DARK)
+
+    @classmethod
     def load_from_config(cls, ctx) -> None:
         """
         从配置文件加载主题色（应用启动时调用）
@@ -65,3 +80,6 @@ class ThemeManager:
         # 设置到qfluentwidgets但不触发信号
         qcolor = QColor(saved_color[0], saved_color[1], saved_color[2])
         setThemeColor(qcolor)
+        # UX-E03: 加载高对比度偏好
+        if getattr(ctx.custom_config, 'high_contrast_mode', False):
+            cls.set_high_contrast(True)
