@@ -28,6 +28,7 @@ from one_dragon.base.operation.application.application_run_context import (
 from one_dragon.base.operation.application.plugin_info import PluginSource
 from one_dragon.base.operation.context_event_bus import ContextEventBus
 from one_dragon.base.operation.context_lazy_signal import ContextLazySignal
+from one_dragon.base.operation.context_notify_event import ContextNotifyEvent
 from one_dragon.base.operation.overlay_debug_bus import OverlayDebugBus
 from one_dragon.base.operation.one_dragon_env_context import (
     ONE_DRAGON_CONTEXT_EXECUTOR,
@@ -514,3 +515,24 @@ class OneDragonContext(ContextEventBus, OneDragonEnvContext):
         self.run_context.after_app_shutdown()
         self.push_service.after_app_shutdown()
         self.overlay_debug_bus.clear()
+
+    # ------------------- 通用 GUI 通知便捷方法 ------------------- #
+
+    def notify_info(self, title: str, content: str) -> None:
+        """
+        触发一条 INFORMATION 级通知,由主窗口 _show_context_notify 渲染为 InfoBar。
+        适用于不依赖具体 parent widget 的通用提示。
+        """
+        self.dispatch_event(ContextNotifyEvent.EVENT_ID, ContextNotifyEvent.info(title, content))
+
+    def notify_success(self, title: str, content: str) -> None:
+        """触发一条 SUCCESS 级通知。"""
+        self.dispatch_event(ContextNotifyEvent.EVENT_ID, ContextNotifyEvent.success(title, content))
+
+    def notify_warning(self, title: str, content: str) -> None:
+        """触发一条 WARNING 级通知。"""
+        self.dispatch_event(ContextNotifyEvent.EVENT_ID, ContextNotifyEvent.warning(title, content))
+
+    def notify_error(self, title: str, content: str) -> None:
+        """触发一条 ERROR 级通知,供关键操作失败时统一反馈。"""
+        self.dispatch_event(ContextNotifyEvent.EVENT_ID, ContextNotifyEvent.error(title, content))
