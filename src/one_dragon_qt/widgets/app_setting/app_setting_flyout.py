@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qfluentwidgets import (
     FlyoutViewBase,
     HyperlinkLabel,
@@ -26,8 +26,9 @@ class AppSettingFlyout(FlyoutViewBase):
     基类提供 ``self.card_margins`` 供子类创建 SettingCard 时使用，
     并自动去掉所有 SettingCard 的边框背景。
 
-    当传入 ``app_id`` 且该 app 在 notify_config.app_map 中时,基类会自动在
-    Flyout 底部追加\"通知设置\"链接,点击弹出 AppNotifySettingFlyout。
+    当传入 ``app_id`` 时,基类在 Flyout 底部追加运行快捷操作行:
+    - 如果该 app 在 notify_config.app_map 中,左侧显示\"通知设置\"链接
+    - 右侧显示\"移到顶部\"按钮,点击后调用 ctx.move_app_to_top 并关闭 Flyout
     """
 
     _current_tip: ClassVar[TeachingTip | None] = None
@@ -48,22 +49,33 @@ class AppSettingFlyout(FlyoutViewBase):
         for card in self.findChildren(SettingCard):
             card.paintEvent = lambda _e: None
 
-        # UX-A02: 如果该应用支持通知配置,在底部追加通知设置链接
-        if self.app_id is not None and self.app_id in self.ctx.notify_config.app_map:
-            self._setup_notify_link(layout)
+        # UX-A02 + UX-A01 Phase 2: 底部追加通知链接 + 移到顶部按钮
+        if self.app_id is not None:
+            self._setup_run_actions(layout)
 
-    def _setup_notify_link(self, layout: QVBoxLayout) -> None:
-        """在 Flyout 底部追加通知设置链接,点击弹出 AppNotifySettingFlyout。"""
+    def _setup_run_actions(self, layout: QVBoxLayout) -> None:
+        """在 Flyout 底部追加\"通知设置\"链接 + \"移到顶部\"按钮。"""
+        from qfluentwidgets import FluentIcon, PushButton
+
+        actions_layout = QHBoxLayout()
+        actions_layout.setSpacing(8)
+
+        if self.app_id in self.ctx.notify_config.app_map:
+            notify_link = HyperlinkLabel(url='', text='通知设置')
+            notify_link.linkActivated.connect(self._open_notify_flyout)
+            actions_layout.addWidget(notify_link, 0, Qt.AlignmentFlag.AlignLeft)
+        else:
+            actions_layout.addStretch(1)
+
+        move_top_btn = PushButton('移到顶部', self, FluentIcon.PIN)
+        move_top_btn.clicked.connect(self._on_move_top_clicked)
+        actions_layout.addWidget(move_top_btn, 0, Qt.AlignmentFlag.AlignRight)
+
         layout.addSpacing(8)
-        link = HyperlinkLabel(url='', text='')
-        link.setText('通知设置 →')
-        link.linkActivated.connect(lambda: self._open_notify_flyout())
-        layout.addWidget(link, 0, Qt.AlignmentFlag.AlignRight)
+        layout.addLayout(actions_layout)
 
     def _open_notify_flyout(self) -> None:
         """打开该应用的通知设置 Flyout。"""
-        if self.app_id is None:
-            return
         from one_dragon_qt.widgets.app_setting.app_notify_setting_flyout import (
             AppNotifySettingFlyout,
         )
@@ -75,6 +87,24 @@ class AppSettingFlyout(FlyoutViewBase):
             target=self,
             parent=self.window(),
         )
+
+    def _on_move_top_clicked(self) -> None:
+        """把当前 app 移到一条龙运行列表顶部,然后关闭 Flyout。"""
+        self.ctx.move_app_to_top(self.app_id)
+        AppSettingFlyout._close_current_tip()
+
+    @classmethod
+    def _close_current_tip(cls) -> None:
+        """关闭当前 Flyout(如果存在)。"""
+        prev = cls._current_tip
+        if prev is None:
+            return
+        try:
+            if prev.isVisible():
+                prev.close()
+        except RuntimeError:
+            pass
+        cls._current_tip = None
 
     def backgroundColor(self) -> QColor:
         return QColor(0, 0, 0, 0)

@@ -28,11 +28,11 @@ from one_dragon.base.operation.application.application_run_context import (
 from one_dragon.base.operation.application.plugin_info import PluginSource
 from one_dragon.base.operation.context_event_bus import ContextEventBus
 from one_dragon.base.operation.context_lazy_signal import ContextLazySignal
-from one_dragon.base.operation.overlay_debug_bus import OverlayDebugBus
 from one_dragon.base.operation.one_dragon_env_context import (
     ONE_DRAGON_CONTEXT_EXECUTOR,
     OneDragonEnvContext,
 )
+from one_dragon.base.operation.overlay_debug_bus import OverlayDebugBus
 from one_dragon.base.push.push_service import PushService
 from one_dragon.base.screen.screen_loader import ScreenContext
 from one_dragon.base.screen.template_loader import TemplateLoader
@@ -455,6 +455,21 @@ class OneDragonContext(ContextEventBus, OneDragonEnvContext):
         self.on_switch_instance()
         self.dispatch_event(ContextInstanceEventEnum.instance_active.value, instance_idx)
 
+    def move_app_to_top(self, app_id: str) -> None:
+        """把指定应用移到当前实例的一条龙运行列表顶部。
+
+        改动后会通过 instance_active 事件通知 UI 刷新。
+        """
+        config = self.app_group_manager.get_one_dragon_group_config(self.current_instance_idx)
+        existing_ids = [item.app_id for item in config.app_list]
+        if app_id not in existing_ids:
+            return
+        new_order = [app_id] + [aid for aid in existing_ids if aid != app_id]
+        config.set_app_order(new_order)
+        config.save_app_list()
+        # 复用 instance_active 事件触发 UI 刷新(AppRunList 监听此事件)
+        self.dispatch_event(ContextInstanceEventEnum.instance_active.value, self.current_instance_idx)
+
     def on_switch_instance(self) -> None:
         """
         切换实例后的回调，用于更新 controller 配置
@@ -503,9 +518,13 @@ class OneDragonContext(ContextEventBus, OneDragonEnvContext):
         OneDragonEnvContext.after_app_shutdown(self)
         from one_dragon.base.conditional_operation.operator import ConditionalOperator
         ConditionalOperator.after_app_shutdown()
-        from one_dragon.base.conditional_operation.operation_executor import OperationExecutor
+        from one_dragon.base.conditional_operation.operation_executor import (
+            OperationExecutor,
+        )
         OperationExecutor.after_app_shutdown()
-        from one_dragon.base.conditional_operation.state_record_service import StateRecordService
+        from one_dragon.base.conditional_operation.state_record_service import (
+            StateRecordService,
+        )
         StateRecordService.after_app_shutdown()
         from one_dragon.utils import gpu_executor
         gpu_executor.shutdown(wait=False)
