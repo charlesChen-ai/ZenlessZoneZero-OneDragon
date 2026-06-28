@@ -1,3 +1,5 @@
+import sys
+
 from qfluentwidgets import FluentIcon
 
 from one_dragon.base.operation.one_dragon_context import OneDragonContext
@@ -22,6 +24,12 @@ class PipButton(NavigationToggleButton):
             on_click=self._on_clicked,
             parent=parent,
         )
+
+        # 非 Windows 平台禁用,画中画依赖 win32 API
+        if sys.platform != 'win32':
+            self.setEnabled(False)
+            self.setToolTip('画中画功能仅在 Windows 上可用')
+            return
 
         # 自动恢复上次的开启状态
         if self.ctx.pip_config.enabled:
