@@ -769,11 +769,21 @@ class HomeInterface(BaseInterface):
         self.main_window.titleBar.set_home_mode(enable)
 
     def _get_theme_color(self) -> tuple[int, int, int]:
-        """获取主题色，优先使用自定义颜色，否则从 Banner 读取"""
+        """获取主题色，优先使用自定义颜色，否则从 Banner 读取。
+
+        当 Banner 提取的主色亮度极端(过暗或过亮)时,fallback 到 Fluent 默认主题色,
+        避免启动按钮颜色与背景对比度过低导致看不清。
+        """
         if self.ctx.custom_config.custom_theme_color:
             return self.ctx.custom_config.theme_color
 
-        return self._banner_widget.theme_color
+        theme_color = self._banner_widget.theme_color
+        luminance = 0.2126 * theme_color[0] + 0.7152 * theme_color[1] + 0.0722 * theme_color[2]
+        if luminance < 40 or luminance > 220:
+            from qfluentwidgets import FluentThemeColor
+            blue = FluentThemeColor.DEFAULT_BLUE.value
+            return blue.red(), blue.green(), blue.blue()
+        return theme_color
 
     def _apply_button_style(self, theme_color: tuple[int, int, int]) -> None:
         """应用样式到启动按钮"""
