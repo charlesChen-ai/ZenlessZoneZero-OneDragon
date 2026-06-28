@@ -20,8 +20,8 @@ class SettingCardBase(SettingCard):
         self.hBoxLayout = QHBoxLayout(self)
         self.vBoxLayout = QVBoxLayout()
 
-        # 设置固定高度
-        self.setFixedHeight(50)
+        # 设置最小高度
+        self.setMinimumHeight(50)
 
         # 设置水平布局属性
         self.hBoxLayout.setSpacing(0)
@@ -37,8 +37,8 @@ class SettingCardBase(SettingCard):
         self.titleLabel = QLabel(gt(title), self)
         self.contentLabel = QLabel(gt(content), self)
 
-        # 设置最大宽度限制，防止文字过长撑大窗口
-        self.contentLabel.setMaximumWidth(500)
+        # 内容过长时自动换行，避免单行省略号
+        self.contentLabel.setWordWrap(True)
 
         # 处理内容显示
         self.contentLabel.setVisible(content is not None and len(content) > 0)
@@ -62,22 +62,15 @@ class SettingCardBase(SettingCard):
         FluentStyleSheet.SETTING_CARD.apply(self)
 
     def setContent(self, content: str):
-        """设置卡片内容"""
-        if content is not None:
-            # 使用fontMetrics来计算文字是否超出最大宽度，如果超出则添加省略号
-            font_metrics = self.contentLabel.fontMetrics()
-            max_width = self.contentLabel.maximumWidth()
-            elided_text = font_metrics.elidedText(content, Qt.TextElideMode.ElideRight, max_width)
-            self.contentLabel.setText(elided_text)
-            # 设置工具提示显示完整文本
-            if font_metrics.horizontalAdvance(content) > max_width:
-                self.contentLabel.setToolTip(content)
-            else:
-                self.contentLabel.setToolTip("")
+        """设置卡片内容,长文本自动换行"""
+        if content is not None and len(content) > 0:
+            self.contentLabel.setText(content)
+            # word wrap 时内容已完整显示,无需 tooltip
+            self.contentLabel.setToolTip("")
         else:
             self.contentLabel.setText("")
             self.contentLabel.setToolTip("")
-        self.contentLabel.setVisible(content is not None and len(content) > 0)  # 根据内容设置可见性
+        self.contentLabel.setVisible(content is not None and len(content) > 0)
 
     def setIconSize(self, width: int, height: int):
         """设置图标的固定大小"""
